@@ -3,54 +3,70 @@ const { //module aliases
     Render, 
     Runner, 
     World, 
-    Bodies,
-    MouseConstraint,
-    Mouse 
-} = Matter;
+    Bodies
+    } = Matter;
+
+//Cells of square defined
+const cellSide = 3;
+//Width and Heigth defined
+const width = 800;
+const height = 800;
 
 const engine = Engine.create();//Create an engine
-
 const { world } = engine;
 
 const render = Render.create({//Create a renderer
     element: document.body,
     engine: engine,
     options: {
-        width: 1000,
-        height: 700
+        wireframes: true,
+        width,
+        height
     }
 });
-
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-World.add(
-    world,
-    MouseConstraint.create(engine, {
-        mouse: Mouse.create(render.canvas)
-    })
-);
-
-
 //Create the walls
 const walls = [
-    Bodies.rectangle(500, 0, 1000, 30, {isStatic: true}),
-    Bodies.rectangle(500, 700, 1000, 30, {isStatic: true}),
-    Bodies.rectangle(0, 350, 30, 700, {isStatic: true}),
-    Bodies.rectangle(1000, 350, 30, 700, {isStatic: true})
+    Bodies.rectangle(width/2, 0, width, 30, {isStatic: true}),
+    Bodies.rectangle(width/2, height, width, 30, {isStatic: true}),
+    Bodies.rectangle(0, height/2, 30, height, {isStatic: true}),
+    Bodies.rectangle(width, height/2, 30, height, {isStatic: true})
 ];
-
 World.add(world, walls);
 
-//Create a circle
+// MAZE GENERATION
 
-//const circleOne = Bodies.circle(500, 100, 60);
+const grid = Array(cellSide)//This create a new Array with 3 elements
+    .fill(null)//Set in every array elements a default value
+    .map(() => Array(cellSide).fill(false));//creates a new array with the results of calling a function for every array element.
+const verticals = Array(cellSide)
+    .fill(null)
+    .map(() => Array(cellSide-1).fill(false));
+const horizontals = Array(cellSide-1)
+    .fill(null)
+    .map(() => Array(cellSide).fill(false));
 
-//World.add(world, circleOne);
+const startRow = Math.floor(Math.random() * cellSide);
+const startColumn = Math.floor(Math.random() * cellSide);
 
-for (let x = 0; x < 30; x++){
-    const xRand = Math.floor(Math.random() * 900);
-    const yRand = Math.floor(Math.random() * 600);
-    const ratioRand = Math.floor(Math.random() * 80);
-    World.add(world, Bodies.circle(xRand, yRand, ratioRand));
-}  
+const stepThroughCell = (row, column) => {
+    //If I have visited the cell ar [row, column], the return
+
+    //Mark this cell as being visited
+
+    //Assemble randomly-ordered list of neighbors
+
+    // For each neighbor...
+
+    // See if that neighbor is out of bounds
+
+    // IF we have visited that neighbor continue to the next neighbor
+
+    //Remove a wall from either the horizontals array or verticals
+
+    // Visit that next cell
+};
+
+stepThroughCell(startRow, startColumn);
