@@ -4,25 +4,29 @@ const { //module aliases
     Runner, 
     World, 
     Bodies,
-    Body
+    Body, 
+    Events
     } = Matter;
 
 //Cells of square defined
-const cellSide = 6;
+const cellsHorizontal = 6;
+const cellsVertical = 5;
 //Width and Heigth defined
-const width = 800;
-const height = 800;
+const width = window.innerWidth;
+const height = window.innerHeight;
 
-const unitLength = width / cellSide;
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = height / cellsVertical;
 
 const engine = Engine.create();//Create an engine
+engine.world.gravity.y = 0;
 const { world } = engine;
 
 const render = Render.create({//Create a renderer
     element: document.body,
     engine: engine,
     options: {
-        wireframes: true,
+        wireframes: false,
         width,
         height
     }
@@ -40,7 +44,6 @@ const walls = [
 World.add(world, walls);
 
 // MAZE GENERATION
-
 const shuffle = (arr) => {//Shuffling Neighboor Pairs
     let counter = arr.length;
 
@@ -55,18 +58,18 @@ const shuffle = (arr) => {//Shuffling Neighboor Pairs
     return arr;
 };
 
-const grid = Array(cellSide)//This create a new Array with 3 elements
+const grid = Array(cellsVertical)//This create a new Array with 3 elements
     .fill(null)//Set in every array elements a default value
-    .map(() => Array(cellSide).fill(false));//creates a new array with the results of calling a function for every array element.
-const verticals = Array(cellSide)
+    .map(() => Array(cellsHorizontal).fill(false));//creates a new array with the results of calling a function for every array element.
+const verticals = Array(cellsVertical)
     .fill(null)
-    .map(() => Array(cellSide-1).fill(false));
-const horizontals = Array(cellSide-1)
+    .map(() => Array(cellsHorizontal -1).fill(false));
+const horizontals = Array(cellsVertical -1)
     .fill(null)
-    .map(() => Array(cellSide).fill(false));
+    .map(() => Array(cellsHorizontal).fill(false));
 
-const startRow = Math.floor(Math.random() * cellSide);
-const startColumn = Math.floor(Math.random() * cellSide);
+const startRow = Math.floor(Math.random() * cellsVertical);
+const startColumn = Math.floor(Math.random() * cellsHorizontal);
 
 const stepThroughCell = (row, column) => {
     // If i have visted the cell at [row, column], then return
@@ -91,9 +94,9 @@ const stepThroughCell = (row, column) => {
       // See if that neighbor is out of bounds
       if (
         nextRow < 0 ||
-        nextRow >= cellSide ||
+        nextRow >= cellsVertical ||
         nextColumn < 0 ||
-        nextColumn >= cellSide
+        nextColumn >= cellsHorizontal
       ) {
         continue;
       }
@@ -129,12 +132,16 @@ horizontals.forEach((row, rowIndex) => {
     }
 
     const wall = Bodies.rectangle(
-      columnIndex * unitLength + unitLength / 2,
-      rowIndex * unitLength + unitLength,
-      unitLength,
+      columnIndex * unitLengthX + unitLengthX / 2,
+      rowIndex * unitLengthY + unitLengthY,
+      unitLengthX,
       10,
       {
-        isStatic: true
+        label: 'wall',
+        isStatic: true,
+        render: {
+          fillStyle: 'blue'
+        }
       }
     );
     World.add(world, wall);
@@ -148,12 +155,16 @@ verticals.forEach((row, rowIndex) => {
     }
 
     const wall = Bodies.rectangle(
-      columnIndex * unitLength + unitLength,
-      rowIndex * unitLength + unitLength / 2,
+      columnIndex * unitLengthX + unitLengthX,
+      rowIndex * unitLengthY + unitLengthY / 2,
       10,
-      unitLength,
+      unitLengthY,
       {
-        isStatic: true
+        label: 'wall',
+        isStatic: true,
+        render: {
+          fillStyle: 'blue'
+        }
       }
     );
     World.add(world, wall);
@@ -162,21 +173,32 @@ verticals.forEach((row, rowIndex) => {
 
 //Drawing the goal
 const goal = Bodies.rectangle(
-  width - unitLength / 2,
-  height - unitLength / 2,
-  unitLength * 0.6,
-  unitLength * 0.6,
+  width - unitLengthX / 2,
+  height - unitLengthY / 2,
+  unitLengthX * 0.6,
+  unitLengthY * 0.6,
   {
-    isStatic: true
+    label: 'goal',
+    isStatic: true,
+    render: {
+      fillStyle: 'green'
+    }
   }
 );
 World.add(world, goal);
 
 //Drawing the ball
+const ballRadius = Math.min(unitLengthX, unitLengthY) / 4;
 const ball = Bodies.circle(
-  unitLength / 4,
-  unitLength / 4,
-  unitLength / 4
+  unitLengthX / 4,
+  unitLengthY / 4,
+  ballRadius,
+  {
+    label: 'ball',
+    render: {
+      fillStyle: 'red'
+    }
+  }
 );
 World.add(world, ball);
 
@@ -195,4 +217,25 @@ document.addEventListener('keydown', event => {
   if(event.keyCode === 65){
     Body.setVelocity(ball, {x: x - 5, y});
   }
+});
+
+//Win Condition
+
+Events.on(engine, 'collisionStart', event => {
+  event.pairs.forEach(collision => {
+    const labels = ['ball', 'goal'];
+
+    if (
+      labels.includes(collision.bodyA.label) &&
+      labels.includes(collision.bodyB.label)
+    ) {
+      document.querySelector('.winner').classList.remove('.hidden');
+      world.gravity.y = 1;
+      world.bodies.forEach(body => {
+        if (body.label === 'wall') {
+          Body.setStatic(body, false);
+        }
+      });
+    }
+  });
 });
